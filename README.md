@@ -294,6 +294,36 @@ npx prisma studio        # Open Prisma visual explorer
 
 ---
 
+## Submission Questions
+
+### If this served 50 organisations and 10,000 requests a day, what in your design would you change?
+
+The first bottleneck would be the synchronous AI call inside the POST handler. At that volume, triage needs to move into a background queue (BullMQ + Redis, or Vercel Queue) so the form submission returns instantly and Gemini runs async — the student gets a "received" confirmation while the AI works. A webhook or polling endpoint then delivers the result. This also decouples retries and rate-limit handling from the request cycle.
+
+The database would need indices on `urgency`, `status`, `safeguarding`, and `createdAt` for the dashboard queries to stay fast. The Neon pooled connection string already helps, but at 10k req/day a dedicated connection pooler (PgBouncer) in front of Postgres becomes worthwhile.
+
+Multi-tenancy would require a `Organisation` model with tenant IDs on every table, row-level security in PostgreSQL enforced at the DB layer (not just in application code), and per-organisation API keys and JWT signing secrets. A single shared Gemini key would hit free-tier limits immediately — each org would need its own key or the platform would need a paid quota with per-org cost tracking.
+
+Finally, the current triage prompt is a single pass. At scale it makes sense to split into a cheap fast classifier (category + urgency) and a second richer pass only for cases routed to `handle_now`, reducing the per-request cost and latency for the majority of escalated cases.
+
+---
+
+### This is real students' personal and welfare data. What would you do differently for privacy and safety in a production version?
+
+Message content should be encrypted at rest — either PostgreSQL column-level encryption or application-level encryption before writing to the database, so a DB breach does not expose raw welfare disclosures. Logs must never contain message text in plain form; structured logging should record event types and case IDs only.
+
+A formal data retention policy is needed: cases should be automatically purged or anonymised after a defined period (e.g. 12 months) under GDPR, with a documented lawful basis for processing. The intake form needs a privacy notice explaining what is collected, why, and for how long, with a link to a full privacy policy before the student submits.
+
+Staff access should be role-controlled with an immutable audit log — who viewed which case and when — because welfare cases are sensitive even for staff. Non-production environments (staging, local dev) should use fully anonymised seed data, never copies of real submissions. The AI call itself sends message content to Google's API; in production this requires a data processing agreement with Google and consideration of whether any content should be redacted before it leaves the organisation's infrastructure.
+
+---
+
+### In two or three sentences, explain how the tool decides what to escalate.
+
+Every message is first scanned for signs of crisis or danger — words suggesting self-harm, immediate risk, or distress — and if any are found the case goes straight to a person with emergency contact numbers shown to the student at once, without waiting for the AI or asking any questions. For everything else, the AI reads the message and decides: if it can answer confidently using the approved resource library it does so directly, if the message is too vague to act on safely it asks one targeted follow-up question, and if it involves immigration or anything genuinely complex it sends the case to the staff queue. Any message that looks like spam or a deliberate attempt to manipulate the system is caught by a separate filter and handled separately, before the AI is even called.
+
+---
+
 ## License
 
 MIT

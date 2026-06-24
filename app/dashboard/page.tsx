@@ -153,7 +153,15 @@ export default function Dashboard() {
 
   useEffect(() => { fetchCases() }, [fetchCases])
 
-  const activeCases   = cases.filter(c => c.status !== 'resolved')
+  const urgencyRank: Record<string, number> = { critical: 0, high: 1, medium: 2, low: 3 }
+  function byUrgency(a: Case, b: Case) {
+    if (a.safeguarding !== b.safeguarding) return a.safeguarding ? -1 : 1
+    const diff = (urgencyRank[a.urgency] ?? 4) - (urgencyRank[b.urgency] ?? 4)
+    if (diff !== 0) return diff
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  }
+
+  const activeCases   = cases.filter(c => c.status !== 'resolved').sort(byUrgency)
   const resolvedCases = cases.filter(c => c.status === 'resolved')
 
   const filteredCases =
