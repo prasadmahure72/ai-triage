@@ -40,6 +40,12 @@ const statusMeta: Record<string, { bg: string; color: string; label: string }> =
   resolved:    { bg: '#ECFDF5', color: '#065F46', label: 'Resolved' },
 }
 
+const dispositionMeta: Record<string, { label: string; bg: string; color: string }> = {
+  escalate:   { label: '↑ Escalated',  bg: '#FFF7ED', color: '#C2410C' },
+  handle_now: { label: '✓ AI Handled', bg: '#F0FDF4', color: '#15803D' },
+  clarify:    { label: '? Clarified',  bg: '#EFF6FF', color: '#1D4ED8' },
+}
+
 const categoryLabels: Record<string, string> = {
   visa_immigration: 'Visa / Immigration',
   health_wellbeing: 'Wellbeing',
@@ -378,7 +384,7 @@ export default function Dashboard() {
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead>
                   <tr style={{ background: '#FAFAFA' }}>
-                    {['#', 'Priority', 'Student', 'Category', 'Message', 'Received', 'Status'].map(col => (
+                    {['#', 'Priority ↑', 'Student', 'Category / Route', 'Message', 'Received', 'Status'].map(col => (
                       <th key={col} style={{ textAlign: 'left', padding: '10px 16px', fontSize: 10, fontWeight: 600, letterSpacing: '0.08em', color: '#C4C9D4', textTransform: 'uppercase', borderBottom: '1px solid #F0F0F5', whiteSpace: 'nowrap', background: '#FDFCFF' }}>
                         {col}
                       </th>
@@ -437,6 +443,13 @@ export default function Dashboard() {
                           <span style={{ fontSize: 12, color: '#8892A4' }}>
                             {categoryLabels[c.category] ?? c.category}
                           </span>
+                          {dispositionMeta[c.disposition] && (
+                            <div style={{ marginTop: 3 }}>
+                              <span style={{ fontSize: 10, background: dispositionMeta[c.disposition].bg, color: dispositionMeta[c.disposition].color, padding: '1px 6px', borderRadius: 4, fontWeight: 700 }}>
+                                {dispositionMeta[c.disposition].label}
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td style={{ padding: '10px 16px' }}>
                           <span style={{ fontSize: 13, color: '#6B7280', whiteSpace: 'nowrap' }}>
@@ -542,6 +555,11 @@ export default function Dashboard() {
                   <span style={{ fontSize: 11, background: '#F9FAFB', color: '#6B7280', padding: '3px 9px', borderRadius: 20, border: '1px solid #F3F4F6', fontWeight: 500 }}>
                     {categoryLabels[selectedCase.category] ?? selectedCase.category}
                   </span>
+                  {dispositionMeta[selectedCase.disposition] && (
+                    <span style={{ fontSize: 11, background: dispositionMeta[selectedCase.disposition].bg, color: dispositionMeta[selectedCase.disposition].color, padding: '3px 9px', borderRadius: 20, fontWeight: 700 }}>
+                      {dispositionMeta[selectedCase.disposition].label}
+                    </span>
+                  )}
                   {selectedCase.safeguarding && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, background: '#FFF1F1', color: '#B91C1C', fontSize: 11, fontWeight: 600, padding: '3px 9px', borderRadius: 20 }}>
                       <ShieldIcon size={11} color="#B91C1C" /> Safeguarding
@@ -577,20 +595,26 @@ export default function Dashboard() {
               </div>
 
               {(selectedCase.studentReply || selectedCase.clarifyQuestion || selectedCase.staffSummary) && (
-                <div style={{ padding: '18px 22px', borderBottom: '1px solid #F3F4F6' }}>
-                  {selectedCase.disposition === 'handle_now' && selectedCase.studentReply && (
-                    <><SectionLabel>Reply sent to student</SectionLabel><LightBox>{selectedCase.studentReply}</LightBox></>
+                <div style={{ padding: '18px 22px', borderBottom: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {selectedCase.staffSummary && (
+                    <div>
+                      <SectionLabel>Staff summary</SectionLabel>
+                      <LightBox>{selectedCase.staffSummary}</LightBox>
+                    </div>
                   )}
-                  {selectedCase.disposition === 'clarify' && selectedCase.clarifyQuestion && (
-                    <>
-                      <SectionLabel>Clarification question</SectionLabel>
+                  {selectedCase.studentReply && (
+                    <div>
+                      <SectionLabel>Reply sent to student</SectionLabel>
+                      <LightBox>{selectedCase.studentReply}</LightBox>
+                    </div>
+                  )}
+                  {selectedCase.clarifyQuestion && (
+                    <div>
+                      <SectionLabel>Clarification question asked</SectionLabel>
                       <div style={{ background: '#EEF2FF', borderLeft: '3px solid #4F46E5', padding: '12px 14px', borderRadius: '0 8px 8px 0' }}>
                         <p style={{ fontSize: 13, fontStyle: 'italic', color: '#374151', margin: 0 }}>{selectedCase.clarifyQuestion}</p>
                       </div>
-                    </>
-                  )}
-                  {selectedCase.disposition === 'escalate' && selectedCase.staffSummary && (
-                    <><SectionLabel>Staff summary</SectionLabel><LightBox>{selectedCase.staffSummary}</LightBox></>
+                    </div>
                   )}
                 </div>
               )}

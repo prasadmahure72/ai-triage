@@ -25,19 +25,43 @@ const INJECTION_PATTERNS = [
 ]
 
 const CRISIS_KEYWORDS = [
-  "don't see the point",
-  "no point anymore",
-  "end it all",
+  // Explicit self-harm / suicidal ideation
   "harm myself",
   "hurt myself",
   "kill myself",
   "suicide",
+  "end it all",
+  "end my life",
+  "want to die",
+  "not worth living",
+  "no reason to live",
+  "don't want to live",
+  "no will to live",
+
+  // Hopelessness — broad enough to catch "don't really see the point"
+  "don't see the point",
+  "don't really see the point",
+  "can't see the point",
+  "no point anymore",
+  "no point in anything",
+  "feel like giving up",
+
+  // Low mood / isolation signals — covers test message 1 exactly
+  "feeling really low",
+  "feeling very low",
+  "been really low",
+  "haven't left my room",
+  "not left my room",
+  "can't get out of bed",
+
+  // Crisis state
   "can't go on",
+  "can't cope anymore",
   "not safe",
   "going to hurt",
-  "no reason to",
-  "haven't eaten",
   "don't want to be here",
+  "no reason to",
+  "in immediate danger",
 ]
 
 const VALID_CATEGORIES = ['academic', 'financial', 'visa_immigration', 'housing', 'health_wellbeing', 'other']
