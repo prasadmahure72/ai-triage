@@ -1,0 +1,59 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Request {
+  id         String   @id @default(cuid())
+  name       String
+  email      String
+  university String
+  course     String
+  year       String
+  message    String   @db.Text
+  createdAt  DateTime @default(now())
+  case       Case?
+}
+
+model TriageResult {
+  id              String   @id @default(cuid())
+  category        String
+  urgency         String
+  safeguarding    Boolean  @default(false)
+  disposition     String
+  confidence      Float
+  reasoning       String   @db.Text
+  rawAiResponse   String   @db.Text
+  validatedOutput String   @db.Text
+  injectionFlag   Boolean  @default(false)
+  spamFlag        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  case            Case?
+}
+
+model Staff {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  name      String
+  role      String   @default("staff")
+  createdAt DateTime @default(now())
+}
+
+model Case {
+  id              String       @id @default(cuid())
+  requestId       String       @unique
+  triageId        String       @unique
+  status          String       @default("new")
+  studentReply    String?      @db.Text
+  staffSummary    String?      @db.Text
+  clarifyQuestion String?      @db.Text
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  request         Request      @relation(fields: [requestId], references: [id])
+  triage          TriageResult @relation(fields: [triageId], references: [id])
+}
